@@ -7,7 +7,7 @@ import './assets/css/global.less'
 
 Vue.use(axios)
 // 配置axios请求的根路径
-axios.defaults.baseURL = 'http://timemeetyou.com:8889/api/private/v1/'
+axios.defaults.baseURL = 'https://www.liulongbin.top:8888/api/private/v1/'
 // 配置axios请求拦截器
 axios.interceptors.request.use(config => {
   config.headers.authorization = window.sessionStorage.getItem('token')

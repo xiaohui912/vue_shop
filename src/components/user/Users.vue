@@ -49,7 +49,7 @@
               </template>
             </el-tooltip>
             <el-tooltip :enterable="false" content="分配角色" effect="dark" placement="top">
-              <el-button icon="el-icon-setting" size="mini" type="warning"></el-button>
+              <el-button icon="el-icon-setting" size="mini" type="warning" @click="setRole(scope.row)"></el-button>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -104,6 +104,23 @@
       <span slot="footer">
         <el-button @click="updateVisible = false">取 消</el-button>
         <el-button type="primary" @click="updateUser">确 定</el-button>
+      </span>
+    </el-dialog>
+    <!--    分配角色对话框-->
+    <el-dialog :visible.sync="setRoleVisible" title="分配角色" width="50%" @close="resetRoleList">
+      <!--      内容主体区-->
+      <div>
+        <p>当前的用户：{{ userInfo.username }}</p>
+        <p>当前的角色：{{ userInfo.role_name }}</p>
+        <p>分配新角色：
+          <el-select v-model="selectedRoleId" placeholder="请选择">
+            <el-option v-for="item in rolesList" :key="item.id" :label="item.roleName" :value="item.id"></el-option>
+          </el-select>
+        </p>
+      </div>
+      <span slot="footer">
+        <el-button @click="setRoleVisible = false">取 消</el-button>
+        <el-button type="primary" @click="updateRole">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -215,7 +232,11 @@ export default {
             trigger: 'blur'
           }
         ]
-      }
+      },
+      setRoleVisible: false,
+      userInfo: {},
+      rolesList: [],
+      selectedRoleId: ''
     }
   },
   created () {
@@ -304,13 +325,33 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         })
-        const { data: res } = await axios.delete(`users/${id}`)
+        const { data: res } = await axios.get(`users/${id}`)
         if (res.meta.status !== 200) return this.$message.error('删除失败')
         this.getUserList()
         this.$message.success('删除成功')
       } catch (error) {
         this.$message.error('删除失败')
       }
+    },
+    // 分配角色方法
+    async setRole (userInfo) {
+      this.userInfo = userInfo
+      const { data: res } = await axios.get('roles')
+      if (res.meta.status !== 200) return this.$message.error('获取角色列表失败')
+      this.rolesList = res.data
+      this.setRoleVisible = true
+    },
+    async updateRole () {
+      if (!this.selectedRoleId) return this.$message.error('请选择分配角色')
+      const { data: res } = await axios.put(`users/${this.userInfo.id}/role`, { rid: this.selectedRoleId })
+      if (res.meta.status !== 200) return this.$message.error('更新角色失败')
+      this.$message.success('更新角色成功')
+      this.getUserList()
+      this.setRoleVisible = false
+    },
+    resetRoleList () {
+      this.selectedRoleId = ''
+      this.userInfo = {}
     }
   }
 }
@@ -328,4 +369,7 @@ export default {
   text-align: center;
 }
 
+p {
+  margin-bottom: 15px;
+}
 </style>
